@@ -8,10 +8,20 @@ This tool is inspired by my own [Twitch channel](https://www.twitch.tv/cmgriffin
 
 The releases are built by [goreleaser](https://github.com/goreleaser/goreleaser) installation script is built by [godownloader](https://github.com/goreleaser/godownloader)
 
-To install, run this command:
+To install, run this command. It will create a .bin folder where the script was run. You will need to add that to your PATH.
+
 ```
-the command would go here
+curl -o- -s https://raw.githubusercontent.com/cmgriffing/git-machine/main/install.sh | bash
 ```
+
+You can also pass in a directory already on your PATH.
+
+```
+curl -o- -s https://raw.githubusercontent.com/cmgriffing/git-machine/main/install.sh | bash -s -- -b /usr/local/bin/
+```
+
+If you would like to manually install the binary, you can find it in the [Releases](https://github.com/cmgriffing/will-it-blend/releases) section of this repo.
+
 
 ## Usage
 
