@@ -154,7 +154,13 @@ func runCommand(command string) bool {
 	cmd.Stderr = os.Stderr
 
 	err := cmd.Start()
-	defer cmd.Wait()
+
+	if err != nil {
+		fmt.Println("Failed to start command")
+		os.Exit(1)
+	}
+
+	err = cmd.Wait()
 
 	if err != nil {
 		return false
