@@ -43,7 +43,6 @@ parse_args() {
 # network, either nothing will happen or will syntax error
 # out preventing half-done work
 execute() {
-  log_info "Made it into execute"
   tmpdir=$(mktemp -d)
   log_debug "downloading files into ${tmpdir}"
   http_download "${tmpdir}/${TARBALL}" "${TARBALL_URL}"
@@ -52,8 +51,6 @@ execute() {
   srcdir="${tmpdir}"
   (cd "${tmpdir}" && untar "${TARBALL}")
   test ! -d "${BINDIR}" && install -d "${BINDIR}"
-
-  log_info "Made it past download"
   for binexe in $BINARIES; do
     if [ "$OS" = "windows" ]; then
       binexe="${binexe}.exe"
@@ -136,7 +133,7 @@ echoerr() {
 log_prefix() {
   echo "$0"
 }
-_logp=7
+_logp=6
 log_set_priority() {
   _logp="$1"
 }
@@ -276,7 +273,7 @@ http_download_wget() {
   fi
 }
 http_download() {
-  log_info "http_download $2"
+  log_debug "http_download $2"
   if is_command curl; then
     http_download_curl "$@"
     return
