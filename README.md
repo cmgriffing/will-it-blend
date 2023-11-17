@@ -4,7 +4,7 @@ Will It Blend is a tool that wraps an arbitrary CLI command. It then creates a T
 
 This tool is inspired by my own [Twitch channel](https://www.twitch.tv/cmgriffing) as well as [ThePrimeagen's](https://www.twitch.tv/theprimeagen) "First Try" predictions.
 
-Warning: Your channel must be affiliated or paternered to be able to have channel points that viewers can spend.
+**Warning: Your channel must be affiliated or paternered to be able to have channel points that viewers can spend.**
 
 ## Installation
 
@@ -29,7 +29,6 @@ go install github.com/cmgriffing/will-it-blend
 
 If you would like to manually install the binary, you can find it in the [Releases](https://github.com/cmgriffing/will-it-blend/releases) section of this repo.
 
-
 ## Usage
 
 To run the tool, the only required argument is the command that you would like to wrap. You should wrap it in quotes if there are spaces in the command.
@@ -43,13 +42,23 @@ will-it-blend "npm run test"
 You can also configure various parts of the process using these optional flags.
 
 - `--title` || `-t`: the title of the prediction (max 45 chars). Default: "Will it blend?"
-- `--duration` || `-d`: amount of seconds to run the prediction for (30s -> 18000s/30m). Default: `30`
+- `--duration` || `-d`: amount of seconds to run the prediction for (30s -> 18000s/30m). Default: `60`
 - `--success` || `-s`: string for success option (max 25 chars). Default: "Yes"
 - `--failure` || `-f`: string for failure option (max 25 chars) Default: "No"
 - `--token` || `-t`: __NOT RECOMMENDED__ Your Twitch API token. You can pass this flag if you want to avoid the OAuth flow. This flag is not recommended to be set live on screen, but if you want to store it in a config file for future use.
-- `--port` || `-p`: The port for the local server for Twitch authentication
+- `--port` || `-p`: The port for the local server for Twitch authentication.
   Must be one of `3000`, `4242`, `6969`, `8000`, `8008`, `8080`, or `42069`. Default: `3000`
 - `--config` || `-c`: path to config file for persistent configuration of flags: Default: `~/.config/.will-it-blend.yaml`
+
+## How It Works
+
+1. You run the command (see Usage section) with a command of your own.
+2. The tool spins up a local server for Twitch Oauth purposes.
+3. You go through the auth process to grant permission to the tool to create and modify Predictions. This should only be required once.
+4. Twitch redirects to a completion HTML page that then sends the token to this tool.
+5. The tool creates a Prediction via the [Twitch Predictions API](https://dev.twitch.tv/docs/api/predictions/).
+6. Your wrapped command runs.
+7. When your wrapped command completes, the tool uses the exit code of your command to resolve the prediction accordingly. Any non-zero exit code is a failure, otherwise success.
 
 ## Caveats
 
@@ -57,9 +66,7 @@ There will be some caveats to wrapping commands. For now, there is just one rega
 
 ### Colorized Output
 
-Some commands detect whether they are running in a proper terminal and disable colorized output when not done so.
-
-Various commands often have arguments to cause them to force colors in the output.
+Some commands detect whether they are running in a proper terminal and disable colorized output when not. Various commands often have arguments to cause them to force colors in the output.
 
 Examples:
 
@@ -69,7 +76,7 @@ Examples:
 - GNU `ls -a` would need the `--colors=always` flag added.
   eg: `will-it-blend "ls -a --colors=always"`
 
-Be sure to consule the manual or help file for the command you are running.
+Be sure to consult the manual or help file for the command you are running.
 
 ## Sponsorship
 

@@ -98,7 +98,7 @@ func Init() {
 
 	RootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "~/.config/.will-it-blend.yaml", "config file (default is $HOME/.config/.will-it-blend.yaml)")
 	RootCmd.PersistentFlags().StringVarP(&title, "title", "t", "Will it blend?", "title of prediction (default is \"Will it blend?\")")
-	RootCmd.PersistentFlags().IntVarP(&duration, "duration", "d", 30, "the duration of the prediction timer (default is 30 seconds)")
+	RootCmd.PersistentFlags().IntVarP(&duration, "duration", "d", 60, "the duration of the prediction timer (default is 60 seconds)")
 	RootCmd.PersistentFlags().StringVarP(&successMessage, "success", "s", "Yes", "success message of prediction (default is \"Yes\")")
 	RootCmd.PersistentFlags().StringVarP(&failureMessage, "failure", "f", "No", "failure message of prediction (default is \"No\")")
 
