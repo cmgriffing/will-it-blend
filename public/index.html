@@ -1,13 +1,12 @@
 <html>
 
 <head>
-  <link rel="stylesheet" href="index.css" />
   <style>
     h1 {
       margin: 4rem;
     }
 
-    body {
+    body, main {
       text-align: center;
     }
 
@@ -28,18 +27,36 @@
 
   <h1>Will It Blend?</h1>
 
-  <a class="auth-button" href="https://id.twitch.tv/oauth2/authorize?client_id={{.ClientId}}&redirect_uri=http://localhost:{{.Port}}&response_type=token&scope={{.Scope}}">Login with Twitch</a>
+  <noscript>
 
-  <div class="success" hidden>
-    <h2>Success! You may now close this page.</h2>
-  </div>
+    <h2>Error: JavaScript Required</h2>
 
-  <div class="error" hidden>
-    <h2>There has been an error</h2>
-  </div>
+    <p>This page requires JavaScript to be able to send a request to the local server.</p>
+
+  </noscript>
+
+  <main hidden>
+
+    <a class="auth-button" href="https://id.twitch.tv/oauth2/authorize?client_id={{.ClientId}}&redirect_uri=http://localhost:{{.Port}}&response_type=token&scope={{.Scope}}">Login with Twitch</a>
+
+    <div class="success" hidden>
+      <h2>Successfully authorized via Twitch!</h2>
+      <p>The command will run. You may now close this page.</p>
+    </div>
+
+    <div class="error" hidden>
+      <h2>There has been an error logging into Twitch.</h2>
+    </div>
+
+  </main>
 
   <script type="text/javascript">
+
+    document.querySelector('main').toggleAttribute("hidden");
+
+
     async function handleHash() {
+      console.log("hash", location.hash)
       const accessToken = location.hash.split("&")?.[0].replace("#access_token=", "");
 
       if (!accessToken) {
