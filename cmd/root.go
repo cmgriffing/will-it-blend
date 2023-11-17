@@ -104,7 +104,7 @@ func Init() {
 
 	RootCmd.PersistentFlags().StringVarP(&token, "token", "k", "", "auth token for Twitch")
 
-	RootCmd.Flags().VarP(&port, "port", "p", `auth server port. allowed: "3000", "4242", "6969", "8000", "8008", "8080", "42069"`)
+	RootCmd.Flags().VarP(&port, "port", "p", `auth server port. allowed: 3000, 4242, 6969, 8000, 8008, 8080, 42069`)
 
 	cobra.OnInitialize(initConfig)
 

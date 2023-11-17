@@ -25,14 +25,14 @@ will-it-blend "npm run test"
 
 You can also configure various parts of the process using these optional flags.
 
-- `--title` || `-t`: the title of the prediction (max 45 chars)
-- `--duration` || `-d`: amount of seconds to run the prediction for (30s -> 18000s/30m)
-- `--success` || `-s`: string for success option (max 25 chars)
-- `--failure` || `-f`: string for failure option (max 25 chars)
+- `--title` || `-t`: the title of the prediction (max 45 chars). Default: "Will it blend?"
+- `--duration` || `-d`: amount of seconds to run the prediction for (30s -> 18000s/30m). Default: `30`
+- `--success` || `-s`: string for success option (max 25 chars). Default: "Yes"
+- `--failure` || `-f`: string for failure option (max 25 chars) Default: "No"
 - `--token` || `-t`: __NOT RECOMMENDED__ Your Twitch API token. You can pass this flag if you want to avoid the OAuth flow. This flag is not recommended to be set live on screen, but if you want to store it in a config file for future use.
 - `--port` || `-p`: The port for the local server for Twitch authentication
-  Must be one of `3000`, `4242`, `6969`, `8000`, `8008`, `8080`, or `42069`
-- `--config` || `-c`: path to config file for persistent configuration of flags
+  Must be one of `3000`, `4242`, `6969`, `8000`, `8008`, `8080`, or `42069`. Default: `3000`
+- `--config` || `-c`: path to config file for persistent configuration of flags: Default: `~/.config/.will-it-blend.yaml`
 
 ## Caveats
 
@@ -56,7 +56,7 @@ Be sure to consule the manual or help file for the command you are running.
 
 ## Sponsorship
 
-If you found this tool useful, I would greatly appreciate you sponsoring me on GitHub to fuel even more fun ideas like this.
+If you found this tool useful, I would greatly appreciate a sponsorship on GitHub to fuel even more fun ideas like this.
 
 My sponsorship page can be found here: [https://github.com/sponsors/cmgriffing](https://github.com/sponsors/cmgriffing)
 
