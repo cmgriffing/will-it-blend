@@ -22,6 +22,11 @@ You can also pass in a directory already on your PATH.
 curl -o- -s https://raw.githubusercontent.com/cmgriffing/will-it-blend/main/install.sh | bash -s -- -b /usr/local/bin/
 ```
 
+You could also use `go install`:
+```
+go install github.com/cmgriffing/will-it-blend
+```
+
 If you would like to manually install the binary, you can find it in the [Releases](https://github.com/cmgriffing/will-it-blend/releases) section of this repo.
 
 
