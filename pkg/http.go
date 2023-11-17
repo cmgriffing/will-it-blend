@@ -1,0 +1,147 @@
+package pkg
+
+import (
+	"encoding/json"
+	"errors"
+	"fmt"
+	"log"
+	"net/http"
+	"os"
+	"os/exec"
+	"runtime"
+	"sync"
+	"text/template"
+
+	"github.com/spf13/viper"
+)
+
+var wg sync.WaitGroup
+
+var Token = ""
+
+func StartServer(port AllowedPort) string {
+	http.HandleFunc("/", createIndexHandler(port))
+	http.HandleFunc("/auth", createAuthHandler(port))
+	http.HandleFunc("/index.css", IndexCssFileHandler)
+	wg.Add(1)
+	go func() {
+		err := http.ListenAndServe(fmt.Sprintf("localhost:%s", port), nil)
+		if err != nil {
+			fmt.Println("Could not start auth server at: ", port, err)
+			os.Exit(1)
+		}
+	}()
+	fmt.Printf("Auth server started at http://localhost:%s\n", port)
+	openBrowser(fmt.Sprintf("https://id.twitch.tv/oauth2/authorize?client_id=%s&redirect_uri=http://localhost:%s&response_type=token&scope=channel:manage:predictions", CLIENT_ID, port))
+
+	wg.Wait()
+	return Token
+}
+
+func IndexCssFileHandler(response http.ResponseWriter, request *http.Request) {
+	http.ServeFile(response, request, "public/index.css")
+}
+
+type IndexValues struct {
+	Port     AllowedPort
+	Scope    string
+	ClientId string
+}
+
+func createIndexHandler(port AllowedPort) func(response http.ResponseWriter, request *http.Request) {
+
+	return func(response http.ResponseWriter, request *http.Request) {
+		var parsedTemplate, err = template.New("index.html").ParseFiles("./public/index.html")
+
+		if err != nil {
+			fmt.Println("Could not parse index.html template")
+			os.Exit(1)
+		}
+
+		var executeErr = parsedTemplate.Execute(response, IndexValues{
+			Port:     port,
+			Scope:    "channel:manage:predictions",
+			ClientId: CLIENT_ID,
+		})
+
+		if executeErr != nil {
+			fmt.Println("Could not execute index.html template with provided data", executeErr)
+			os.Exit(1)
+		}
+	}
+}
+
+func createAuthHandler(port AllowedPort) func(response http.ResponseWriter, request *http.Request) {
+	return func(response http.ResponseWriter, request *http.Request) {
+
+		var postAuthBody PostAuthBody
+		err := json.NewDecoder(request.Body).Decode(&postAuthBody)
+		if err != nil {
+			fmt.Println("Could not decode request body at POST:Auth")
+			os.Exit(1)
+		}
+
+		viper.Set("token", postAuthBody.Token)
+		Token = postAuthBody.Token
+
+		wg.Done()
+	}
+}
+
+type PostAuthBody struct {
+	Token string `json:"token"`
+}
+
+func openBrowser(url string) {
+
+	fmt.Println("Opening browser for Twitch OAuth flow.")
+
+	var err error
+
+	switch runtime.GOOS {
+	case "linux":
+		err = exec.Command("xdg-open", url).Start()
+	case "windows":
+		err = exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Start()
+	case "darwin":
+		err = exec.Command("open", url).Start()
+	default:
+		err = fmt.Errorf("unsupported platform")
+	}
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+type AllowedPort string
+
+const (
+	AllowedPort3000  AllowedPort = "3000"
+	AllowedPort4242  AllowedPort = "4242"
+	AllowedPort6969  AllowedPort = "6969"
+	AllowedPort8000  AllowedPort = "8000"
+	AllowedPort8008  AllowedPort = "8008"
+	AllowedPort8080  AllowedPort = "8080"
+	AllowedPort42069 AllowedPort = "42069"
+)
+
+// String is used both by fmt.Print and by Cobra in help text
+func (e *AllowedPort) String() string {
+	return string(*e)
+}
+
+// Set must have pointer receiver so it doesn't change the value of a copy
+func (e *AllowedPort) Set(v string) error {
+	switch v {
+	case "3000", "4242", "6969", "8000", "8008", "8080", "42069":
+		*e = AllowedPort(v)
+		return nil
+	default:
+		return errors.New(`must be one of 3000, 4242, 6969, 8000, 8008, 8080, or 42069`)
+	}
+}
+
+// Type is only used in help text
+func (e *AllowedPort) Type() string {
+	return "AllowedPort"
+}

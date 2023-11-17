@@ -1,0 +1,52 @@
+<html>
+
+<head>
+  <link rel="stylesheet" href="index.css" />
+</head>
+
+<body>
+
+  <h1>Will It Blend?</h1>
+
+  <a class="auth-button" href="https://id.twitch.tv/oauth2/authorize?client_id={{.ClientId}}&redirect_uri=http://localhost:{{.Port}}&response_type=token&scope={{.Scope}}">Login with Twitch</a>
+
+  <div class="success" hidden>
+    <h2>Success! You may now close this page.</h2>
+  </div>
+
+  <div class="error" hidden>
+    <h2>There has been an error</h2>
+  </div>
+
+  <script type="text/javascript">
+    async function handleHash() {
+      const accessToken = location.hash.split("&")?.[0].replace("#access_token=", "");
+
+      if (!accessToken) {
+        console.log("No access token. Bailing out")
+        return;
+      }
+
+      const response = await fetch("http://localhost:{{.Port}}/auth", {
+        method: 'POST',
+        body: JSON.stringify({
+          token: accessToken
+        })
+      });
+
+      if (response.ok) {
+        document.querySelector('.auth-button').toggleAttribute("hidden");
+        document.querySelector('.success').toggleAttribute("hidden");
+      } else {
+        console.log("Error: Could not post auth.")
+        document.querySelector('.error').toggleAttribute("hidden");
+      }
+
+  }
+
+  handleHash();
+  </script>
+
+
+</body>
+</html>
