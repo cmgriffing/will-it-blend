@@ -109,11 +109,11 @@ func Init() {
 	cobra.OnInitialize(initConfig)
 
 	viper.BindPFlag("title", RootCmd.PersistentFlags().Lookup("title"))
-	allSettings := viper.AllSettings()
-	if allSettings != nil {
-		fmt.Println("allSettings", allSettings)
-		fmt.Println("title", viper.GetString("title"))
-	}
+	// allSettings := viper.AllSettings()
+	// if allSettings != nil {
+	// 	fmt.Println("allSettings", allSettings)
+	// 	fmt.Println("title", viper.GetString("title"))
+	// }
 }
 
 func initConfig() {
