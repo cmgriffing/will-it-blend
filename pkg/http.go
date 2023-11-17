@@ -22,7 +22,6 @@ var Token = ""
 func StartServer(port AllowedPort) string {
 	http.HandleFunc("/", createIndexHandler(port))
 	http.HandleFunc("/auth", createAuthHandler(port))
-	http.HandleFunc("/index.css", IndexCssFileHandler)
 	wg.Add(1)
 	go func() {
 		err := http.ListenAndServe(fmt.Sprintf("localhost:%s", port), nil)
@@ -38,10 +37,6 @@ func StartServer(port AllowedPort) string {
 	return Token
 }
 
-func IndexCssFileHandler(response http.ResponseWriter, request *http.Request) {
-	http.ServeFile(response, request, "public/index.css")
-}
-
 type IndexValues struct {
 	Port     AllowedPort
 	Scope    string
@@ -51,7 +46,7 @@ type IndexValues struct {
 func createIndexHandler(port AllowedPort) func(response http.ResponseWriter, request *http.Request) {
 
 	return func(response http.ResponseWriter, request *http.Request) {
-		var parsedTemplate, err = template.New("index.html").ParseFiles("./public/index.html")
+		var parsedTemplate, err = template.New("index.html").Parse(indexTemplate)
 
 		if err != nil {
 			fmt.Println("Could not parse index.html template")
@@ -145,3 +140,78 @@ func (e *AllowedPort) Set(v string) error {
 func (e *AllowedPort) Type() string {
 	return "AllowedPort"
 }
+
+var indexTemplate = `
+<html>
+
+<head>
+  <link rel="stylesheet" href="index.css" />
+  <style>
+    h1 {
+      margin: 4rem;
+    }
+
+    body {
+      text-align: center;
+    }
+
+    a {
+      color: white;
+      background-color: #9147FF;
+      text-decoration: none;
+      padding: 1rem;
+    }
+
+    .error {
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1>Will It Blend?</h1>
+
+  <a class="auth-button" href="https://id.twitch.tv/oauth2/authorize?client_id={{.ClientId}}&redirect_uri=http://localhost:{{.Port}}&response_type=token&scope={{.Scope}}">Login with Twitch</a>
+
+  <div class="success" hidden>
+    <h2>Success! You may now close this page.</h2>
+  </div>
+
+  <div class="error" hidden>
+    <h2>There has been an error</h2>
+  </div>
+
+  <script type="text/javascript">
+    async function handleHash() {
+      const accessToken = location.hash.split("&")?.[0].replace("#access_token=", "");
+
+      if (!accessToken) {
+        console.log("No access token. Bailing out")
+        return;
+      }
+
+      const response = await fetch("http://localhost:{{.Port}}/auth", {
+        method: 'POST',
+        body: JSON.stringify({
+          token: accessToken
+        })
+      });
+
+      if (response.ok) {
+        document.querySelector('.auth-button').toggleAttribute("hidden");
+        document.querySelector('.success').toggleAttribute("hidden");
+      } else {
+        console.log("Error: Could not post auth.")
+        document.querySelector('.error').toggleAttribute("hidden");
+      }
+
+  }
+
+  handleHash();
+  </script>
+
+
+</body>
+</html>
+`
