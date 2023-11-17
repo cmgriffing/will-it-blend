@@ -11,13 +11,13 @@ The releases are built by [goreleaser](https://github.com/goreleaser/goreleaser)
 To install, run this command. It will create a .bin folder where the script was run. You will need to add that to your PATH.
 
 ```
-curl -o- -s https://raw.githubusercontent.com/cmgriffing/git-machine/main/install.sh | bash
+curl -o- -s https://raw.githubusercontent.com/cmgriffing/will-it-blend/main/install.sh | bash
 ```
 
 You can also pass in a directory already on your PATH.
 
 ```
-curl -o- -s https://raw.githubusercontent.com/cmgriffing/git-machine/main/install.sh | bash -s -- -b /usr/local/bin/
+curl -o- -s https://raw.githubusercontent.com/cmgriffing/will-it-blend/main/install.sh | bash -s -- -b /usr/local/bin/
 ```
 
 If you would like to manually install the binary, you can find it in the [Releases](https://github.com/cmgriffing/will-it-blend/releases) section of this repo.
