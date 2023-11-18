@@ -4,7 +4,7 @@ Will It Blend is a tool that wraps an arbitrary CLI command. It then creates a T
 
 This tool is inspired by my own [Twitch channel](https://www.twitch.tv/cmgriffing) as well as [ThePrimeagen's](https://www.twitch.tv/theprimeagen) "First Try" predictions.
 
-**Warning: Your channel must be affiliated or paternered to be able to have channel points that viewers can spend.**
+**Warning: Your channel must be affiliated or partnered to be able to have channel points that viewers can spend.**
 
 ## Installation
 
