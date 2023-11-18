@@ -6,7 +6,6 @@ import (
 	"os"
 	"os/exec"
 	"strings"
-	"sync"
 	"time"
 
 	pkg "github.com/cmgriffing/will-it-blend/pkg"
@@ -15,8 +14,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
-
-var wg sync.WaitGroup
 
 var cfgFile = ""
 var title = ""
