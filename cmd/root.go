@@ -5,10 +5,10 @@ import (
 	"math"
 	"os"
 	"os/exec"
-	"strings"
 	"time"
 
 	pkg "github.com/cmgriffing/will-it-blend/pkg"
+	"github.com/google/shlex"
 
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
@@ -25,7 +25,7 @@ var token = ""
 
 var RootCmd = &cobra.Command{
 	Use:     "will-it-blend",
-	Version: "0.3.1",
+	Version: "0.3.2",
 	Short:   "will-it-blend is a tool for automating the creation of CLI command based Twitch.tv predictions",
 	Long: `will-it-blend is a tool for automating the creation of CLI command based Twitch.tv predictions.
 
@@ -143,14 +143,19 @@ func initConfig() {
 }
 
 func runCommand(command string) bool {
-	parts := strings.Split(command, " ")
+	parts, err := shlex.Split(command)
+
+	if err != nil {
+		fmt.Println("Failed to parse command", err)
+		os.Exit(1)
+	}
 
 	cmd := exec.Command(parts[0], parts[1:]...)
 
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
-	err := cmd.Start()
+	err = cmd.Start()
 
 	if err != nil {
 		fmt.Println("Failed to start command")
