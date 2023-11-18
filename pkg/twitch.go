@@ -37,7 +37,7 @@ func GetUserId(token string) string {
 
 	if getUserResponse.StatusCode != 200 {
 		bodyStr, _ := io.ReadAll(getUserResponse.Body)
-		fmt.Println("Could not create prediction", string(bodyStr))
+		fmt.Println("Could not create user ID request", string(bodyStr))
 		os.Exit(1)
 	}
 
@@ -49,7 +49,7 @@ func GetUserId(token string) string {
 	}
 
 	if len(getUserBody.Data) == 0 {
-		fmt.Println("Could not fetch user Id")
+		fmt.Println("Could not fetch user Id. data was empty")
 		os.Exit(1)
 	}
 
@@ -97,7 +97,7 @@ func CreatePrediction(token string, title string, userId string, successMessage 
 
 	createPredictionRequest, err := http.NewRequest("POST", "https://api.twitch.tv/helix/predictions", bytes.NewBuffer(createPredictionRequestBody))
 	if err != nil {
-		fmt.Println("Could not create Request for User ID", err)
+		fmt.Println("Could not create Request for Prediction", err)
 		os.Exit(1)
 	}
 
@@ -121,12 +121,12 @@ func CreatePrediction(token string, title string, userId string, successMessage 
 	var createPredictionResponseBody CreatePredictionBody
 	err = json.NewDecoder(createPredictionResponse.Body).Decode(&createPredictionResponseBody)
 	if err != nil {
-		fmt.Println("Could not decode request body at POST:Auth", err)
+		fmt.Println("Could not decode request body at create prediction", err)
 		os.Exit(1)
 	}
 
 	if len(createPredictionResponseBody.Data) == 0 {
-		fmt.Println("Could not decode request body at POST:Auth")
+		fmt.Println("Could not create prediction. data was empty")
 		os.Exit(1)
 	}
 
@@ -200,12 +200,12 @@ func IsPredictionFinished(token string, userId string, predictionId string) bool
 	var getPredictionResponseBody CreatePredictionBody
 	err = json.NewDecoder(getPredictionResponse.Body).Decode(&getPredictionResponseBody)
 	if err != nil {
-		fmt.Println("Could not decode request body at POST:Auth")
+		fmt.Println("Could not decode request body at get prediction")
 		os.Exit(1)
 	}
 
 	if len(getPredictionResponseBody.Data) == 0 {
-		fmt.Println("Could not decode request body at POST:Auth")
+		fmt.Println("Could not get prediction. data was empty")
 		os.Exit(1)
 	}
 

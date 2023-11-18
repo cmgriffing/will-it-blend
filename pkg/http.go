@@ -111,8 +111,10 @@ func openBrowser(url string) {
 type AllowedPort string
 
 const (
+	AllowedPort1337  AllowedPort = "1337"
 	AllowedPort3000  AllowedPort = "3000"
 	AllowedPort4242  AllowedPort = "4242"
+	AllowedPort6666  AllowedPort = "6666"
 	AllowedPort6969  AllowedPort = "6969"
 	AllowedPort8000  AllowedPort = "8000"
 	AllowedPort8008  AllowedPort = "8008"
@@ -128,11 +130,11 @@ func (e *AllowedPort) String() string {
 // Set must have pointer receiver so it doesn't change the value of a copy
 func (e *AllowedPort) Set(v string) error {
 	switch v {
-	case "3000", "4242", "6969", "8000", "8008", "8080", "42069":
+	case "1337", "3000", "4242", "6666", "6969", "8000", "8008", "8080", "42069":
 		*e = AllowedPort(v)
 		return nil
 	default:
-		return errors.New(`must be one of 3000, 4242, 6969, 8000, 8008, 8080, or 42069`)
+		return errors.New(`must be one of 1337, 3000, 4242, 6666, 6969, 8000, 8008, 8080, or 42069`)
 	}
 }
 
