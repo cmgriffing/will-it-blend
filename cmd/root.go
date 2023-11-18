@@ -28,7 +28,7 @@ var token = ""
 
 var RootCmd = &cobra.Command{
 	Use:     "will-it-blend",
-	Version: "0.0.1",
+	Version: "0.2.1",
 	Short:   "will-it-blend is a tool for automating the creation of CLI command based Twitch.tv predictions",
 	Long: `will-it-blend is a tool for automating the creation of CLI command based Twitch.tv predictions.
 
