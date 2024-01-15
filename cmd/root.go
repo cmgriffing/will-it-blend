@@ -33,6 +33,8 @@ var (
     failureMsg    string
     port          pkg.AllowedPort
     token         string
+    successMessage string
+    failureMessage string
 )
 
 // RootCmd is the root command for the will-it-blend CLI application
@@ -55,7 +57,13 @@ func Init() {
 // initializeFlags sets up the command line flags
 func initializeFlags() {
     RootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", DefaultCfgFile, "config file (default is $HOME/.config/.will-it-blend.yaml)")
-    // Other flag initializations...
+    RootCmd.PersistentFlags().StringVarP(&title, "title", "t", "Will it blend?", "title of prediction (default is \"Will it blend?\")")
+	RootCmd.PersistentFlags().IntVarP(&duration, "duration", "d", 60, "the duration of the prediction timer (default is 60 seconds)")
+	RootCmd.PersistentFlags().StringVarP(&successMessage, "success", "s", "Yes", "success message of prediction (default is \"Yes\")")
+	RootCmd.PersistentFlags().StringVarP(&failureMessage, "failure", "f", "No", "failure message of prediction (default is \"No\")")
+	RootCmd.PersistentFlags().StringVarP(&token, "token", "k", "", "auth token for Twitch")
+	RootCmd.Flags().VarP(&port, "port", "p", `auth server port. allowed: 1337, 3000, 4242, 6666, 6969, 8000, 8008, 8080, 42069`)
+    viper.BindPFlag("title", RootCmd.PersistentFlags().Lookup("title"))
 }
 
 // initConfig reads in config file and ENV variables if set.
