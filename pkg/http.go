@@ -118,8 +118,6 @@ const (
 	AllowedPort6969  AllowedPort = "6969"
 	AllowedPort8000  AllowedPort = "8000"
 	AllowedPort8008  AllowedPort = "8008"
-	AllowedPort8080  AllowedPort = "8080"
-	AllowedPort42069 AllowedPort = "42069"
 )
 
 // String is used both by fmt.Print and by Cobra in help text
