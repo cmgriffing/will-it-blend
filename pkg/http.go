@@ -111,13 +111,13 @@ func openBrowser(url string) {
 type AllowedPort string
 
 const (
+	AllowedPort1337  AllowedPort = "1337"
 	AllowedPort3000  AllowedPort = "3000"
 	AllowedPort4242  AllowedPort = "4242"
+	AllowedPort6666  AllowedPort = "6666"
 	AllowedPort6969  AllowedPort = "6969"
 	AllowedPort8000  AllowedPort = "8000"
 	AllowedPort8008  AllowedPort = "8008"
-	AllowedPort8080  AllowedPort = "8080"
-	AllowedPort42069 AllowedPort = "42069"
 )
 
 // String is used both by fmt.Print and by Cobra in help text

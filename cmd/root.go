@@ -50,6 +50,7 @@ It will resolve the prediction based on the return code of the specified command
 }
 
 func Init() {
+    port = pkg.AllowedPort3000
     cobra.OnInitialize(initConfig)
     initializeFlags()
 }
