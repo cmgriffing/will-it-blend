@@ -1,89 +1,93 @@
+<!DOCTYPE html>
 <html>
-
 <head>
-  <style>
-    h1 {
-      margin: 4rem;
-    }
+    <title>Will It Blend?</title>
+    <style>
+        h1 {
+            margin: 4rem;
+        }
 
-    body, main {
-      text-align: center;
-    }
+        body, main {
+            text-align: center;
+        }
 
-    a {
-      color: white;
-      background-color: #9147FF;
-      text-decoration: none;
-      padding: 1rem;
-    }
+        a.auth-button {
+            color: white;
+            background-color: #9147FF;
+            text-decoration: none;
+            padding: 1rem;
+        }
 
-    .error {
-      display: none;
-    }
-  </style>
+        .hidden {
+            display: none;
+        }
+
+        .error-message {
+            color: red;
+        }
+    </style>
 </head>
-
 <body>
 
-  <h1>Will It Blend?</h1>
+    <h1>Will It Blend?</h1>
 
-  <noscript>
+    <noscript>
+        <h2>Error: JavaScript Required</h2>
+        <p>This page requires JavaScript to be able to send a request to the local server.</p>
+    </noscript>
 
-    <h2>Error: JavaScript Required</h2>
+    <main class="hidden">
+        <a class="auth-button" href="https://id.twitch.tv/oauth2/authorize?client_id={{.ClientId}}&redirect_uri=http://localhost:{{.Port}}&response_type=token&scope={{.Scope}}">Login with Twitch</a>
 
-    <p>This page requires JavaScript to be able to send a request to the local server.</p>
+        <div class="success hidden">
+            <h2>Successfully authorized via Twitch!</h2>
+            <p>The command will run. You may now close this page.</p>
+        </div>
 
-  </noscript>
+        <div class="error hidden">
+            <h2>There has been an error logging into Twitch.</h2>
+            <p class="error-message"></p>
+        </div>
+    </main>
 
-  <main hidden>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const main = document.querySelector('main');
+            main.classList.remove('hidden');
 
-    <a class="auth-button" href="https://id.twitch.tv/oauth2/authorize?client_id={{.ClientId}}&redirect_uri=http://localhost:{{.Port}}&response_type=token&scope={{.Scope}}">Login with Twitch</a>
+            async function handleHash() {
+                console.log("Processing hash:", location.hash);
+                const accessToken = new URLSearchParams(location.hash.substring(1)).get('access_token');
 
-    <div class="success" hidden>
-      <h2>Successfully authorized via Twitch!</h2>
-      <p>The command will run. You may now close this page.</p>
-    </div>
+                if (!accessToken) {
+                    console.log("No access token. Bailing out.");
+                    return;
+                }
 
-    <div class="error" hidden>
-      <h2>There has been an error logging into Twitch.</h2>
-    </div>
+                try {
+                    const response = await fetch(`http://localhost:{{.Port}}/auth`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ token: accessToken })
+                    });
 
-  </main>
+                    if (response.ok) {
+                        main.querySelector('.auth-button').classList.add('hidden');
+                        main.querySelector('.success').classList.remove('hidden');
+                    } else {
+                        throw new Error('Could not post auth.');
+                    }
+                } catch (error) {
+                    console.error(error);
+                    const errorMessage = main.querySelector('.error-message');
+                    errorMessage.textContent = error.message;
+                    main.querySelector('.error').classList.remove('hidden');
+                }
+            }
 
-  <script type="text/javascript">
-
-    document.querySelector('main').toggleAttribute("hidden");
-
-
-    async function handleHash() {
-      console.log("hash", location.hash)
-      const accessToken = location.hash.split("&")?.[0].replace("#access_token=", "");
-
-      if (!accessToken) {
-        console.log("No access token. Bailing out")
-        return;
-      }
-
-      const response = await fetch("http://localhost:{{.Port}}/auth", {
-        method: 'POST',
-        body: JSON.stringify({
-          token: accessToken
-        })
-      });
-
-      if (response.ok) {
-        document.querySelector('.auth-button').toggleAttribute("hidden");
-        document.querySelector('.success').toggleAttribute("hidden");
-      } else {
-        console.log("Error: Could not post auth.")
-        document.querySelector('.error').toggleAttribute("hidden");
-      }
-
-  }
-
-  handleHash();
-  </script>
-
+            handleHash();
+        });
+    </script>
 
 </body>
 </html>

@@ -47,7 +47,7 @@ It will resolve the prediction based on the return code of the specified command
     Run:     runCommandPrediction,
 }
 
-func init() {
+func Init() {
     cobra.OnInitialize(initConfig)
     initializeFlags()
 }
