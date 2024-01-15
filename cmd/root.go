@@ -5,7 +5,6 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"strconv"
 	"time"
 
 	pkg "github.com/cmgriffing/will-it-blend/pkg"
@@ -93,23 +92,25 @@ func runCommandPrediction(cmd *cobra.Command, args []string) {
     if err != nil {
         log.Fatalf("Error getting user ID: %s", err)
     }
-
-    userIdStr := strconv.Itoa(userId)
-    prediction, err := createAndRunPrediction(token, userIdStr)
+    
+    prediction, err := createAndRunPrediction(token, userId)
     if err != nil {
         log.Fatalf("Error running prediction: %s", err)
     }
 
-    if !awaitPredictionCompletion(token, userIdStr, prediction.PredictionId) {
+    if !awaitPredictionCompletion(token, userId, prediction.PredictionId) {
         log.Fatal("Prediction did not lock as expected")
     }
 
-    resolvePredictionBasedOnCommand(command, token, userIdStr, prediction)
+    resolvePredictionBasedOnCommand(command, token, userId, prediction)
 }
 
 // createAndRunPrediction creates a new prediction and waits for its duration
 func createAndRunPrediction(token string, userId string) (pkg.CreatePredictionResult, error) {
-    prediction := pkg.CreatePrediction(token, title, userId, successMsg, failureMsg, duration)
+    prediction, err := pkg.CreatePrediction(token, title, userId, successMsg, failureMsg, duration)
+    if err != nil {
+        return pkg.CreatePredictionResult{}, fmt.Errorf("failed to create prediction: %w", err)
+    }
     fmt.Printf("Prediction running. Command will run after %d seconds\n", duration)
     time.Sleep(time.Duration(duration) * time.Second)
     return prediction, nil
@@ -121,7 +122,11 @@ func awaitPredictionCompletion(token, userId, predictionId string) bool {
     const loopMax = 18 // 90 seconds divided by 5
     for loopCount := 0; loopCount < loopMax; loopCount++ {
         time.Sleep(loopSleep * time.Second)
-        if finished := pkg.IsPredictionFinished(token, userId, predictionId); finished {
+        finished, err := pkg.IsPredictionFinished(token, userId, predictionId)
+        if err != nil {
+            log.Fatalf("Failed to check if prediction is finished: %v", err)
+        }
+        if finished {
             return true
         }
     }

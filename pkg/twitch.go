@@ -3,218 +3,201 @@ package pkg
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
-	"os"
 )
 
+// Constants
+const (
+    TwitchAPIURL = "https://api.twitch.tv/helix"
+)
+
+// UserResponseBody represents the response body for a user request
 type UserResponseBody struct {
-	Id string `json:"id"`
+    Id string `json:"id"`
 }
 
+// GetUserResponseBody represents the response body for getting user information
 type GetUserResponseBody struct {
-	Data []UserResponseBody `json:"data"`
+    Data []UserResponseBody `json:"data"`
 }
 
-func GetUserId(token string) (int, error) {
-	getUserRequest, err := http.NewRequest("GET", "https://api.twitch.tv/helix/users", nil)
+// GetUserId fetches the user ID from Twitch
+func GetUserId(token string) (string, error) {
+    request, err := http.NewRequest("GET", TwitchAPIURL+"/users", nil)
+    if err != nil {
+        return "", fmt.Errorf("failed to create request for User ID: %w", err)
+    }
 
-	if err != nil {
-		fmt.Println("Could not create Request for User ID", err)
-		os.Exit(1)
+    request.Header.Add("Authorization", fmt.Sprintf("Bearer %s", token))
+    request.Header.Add("Client-Id", CLIENT_ID)
+
+    response, err := httpClient.Do(request)
+    if err != nil {
+        return "", fmt.Errorf("failed to fetch user ID from Twitch: %w", err)
+    }
+    defer response.Body.Close()
+
+	if response.StatusCode != 200 {
+		bodyBytes, _ := io.ReadAll(response.Body)
+		bodyStr := string(bodyBytes)
+		return "", fmt.Errorf("failed to fetch user ID: %s", bodyStr)
 	}
 
-	getUserRequest.Header.Add("Authorization", fmt.Sprintf("Bearer %s", token))
-	getUserRequest.Header.Add("Client-Id", CLIENT_ID)
+    var getUserBody GetUserResponseBody
+    err = json.NewDecoder(response.Body).Decode(&getUserBody)
+    if err != nil {
+        return "", fmt.Errorf("failed to decode response body: %w", err)
+    }
 
-	getUserResponse, err := httpClient.Do(getUserRequest)
+    if len(getUserBody.Data) == 0 {
+        return "", errors.New("user data was empty")
+    }
 
-	if err != nil {
-		fmt.Println("Could not fetch user ID from Twitch", err)
-		os.Exit(1)
-	}
-
-	if getUserResponse.StatusCode != 200 {
-		bodyStr, _ := io.ReadAll(getUserResponse.Body)
-		fmt.Println("Could not create user ID request", string(bodyStr))
-		os.Exit(1)
-	}
-
-	var getUserBody GetUserResponseBody
-	err = json.NewDecoder(getUserResponse.Body).Decode(&getUserBody)
-	if err != nil {
-		fmt.Println("Could not decode request body at POST:Auth")
-		os.Exit(1)
-	}
-
-	if len(getUserBody.Data) == 0 {
-		fmt.Println("Could not fetch user Id. data was empty")
-		os.Exit(1)
-	}
-
-	return 0, err
+    return getUserBody.Data[0].Id, nil
 }
 
+// CreatePredictionResult represents the result of a prediction creation
 type CreatePredictionResult struct {
-	PredictionId     string
-	SuccessOutcomeId string
-	FailureOutcomeId string
+    PredictionId     string
+    SuccessOutcomeId string
+    FailureOutcomeId string
 }
 
+// CreatePredictionOutcome represents the outcome structure in a prediction
 type CreatePredictionOutcome struct {
-	Id string `json:"id"`
+    Id string `json:"id"`
 }
 
+// CreatePredictionData represents the prediction data structure
 type CreatePredictionData struct {
-	Id               string                    `json:"id"`
-	WinningOutcomeId string                    `json:"winning_outcome_id"`
-	Outcomes         []CreatePredictionOutcome `json:"outcomes"`
-	Status           string                    `json:"status"`
+    Id               string                    `json:"id"`
+    WinningOutcomeId string                    `json:"winning_outcome_id"`
+    Outcomes         []CreatePredictionOutcome `json:"outcomes"`
+    Status           string                    `json:"status"`
 }
 
+// CreatePredictionBody represents the body of a prediction creation response
 type CreatePredictionBody struct {
-	Data []CreatePredictionData `json:"data"`
+    Data []CreatePredictionData `json:"data"`
 }
 
-func CreatePrediction(token string, title string, userId string, successMessage string, failureMessage string, duration int) CreatePredictionResult {
+// CreatePrediction creates a prediction on Twitch
+func CreatePrediction(token string, title string, userId string, successMessage string, failureMessage string, duration int) (CreatePredictionResult, error) {
+    requestBody := fmt.Sprintf(`{
+        "broadcaster_id": "%s",
+        "title": "%s",
+        "outcomes": [
+            {"title": "%s"},
+            {"title": "%s"}
+        ],
+        "prediction_window": %d
+    }`, userId, title, successMessage, failureMessage, duration)
 
-	createPredictionRequestBodyStr := fmt.Sprintf(`{
-		"broadcaster_id": "%s",
-		"title": "%s",
-		"outcomes": [
-			{
-				"title": "%s"
-			},
-			{
-				"title": "%s"
-			}
-		],
-		"prediction_window": %d
-	}`, userId, title, successMessage, failureMessage, duration)
+    request, err := http.NewRequest("POST", TwitchAPIURL+"/predictions", bytes.NewBuffer([]byte(requestBody)))
+    if err != nil {
+        return CreatePredictionResult{}, fmt.Errorf("failed to create request for prediction: %w", err)
+    }
 
-	createPredictionRequestBody := []byte(createPredictionRequestBodyStr)
+    addRequestHeaders(request, token)
 
-	createPredictionRequest, err := http.NewRequest("POST", "https://api.twitch.tv/helix/predictions", bytes.NewBuffer(createPredictionRequestBody))
-	if err != nil {
-		fmt.Println("Could not create Request for Prediction", err)
-		os.Exit(1)
-	}
+    response, err := httpClient.Do(request)
+    if err != nil {
+        return CreatePredictionResult{}, fmt.Errorf("failed to create prediction: %w", err)
+    }
+    defer response.Body.Close()
 
-	createPredictionRequest.Header.Add("Authorization", fmt.Sprintf("Bearer %s", token))
-	createPredictionRequest.Header.Add("Client-Id", CLIENT_ID)
-	createPredictionRequest.Header.Add("Content-Type", "application/json")
+    if response.StatusCode != 200 {
+        bodyStr, _ := io.ReadAll(response.Body)
+        return CreatePredictionResult{}, fmt.Errorf("failed to create prediction: %s", bodyStr)
+    }
 
-	createPredictionResponse, err := httpClient.Do(createPredictionRequest)
+    var responseBody CreatePredictionBody
+    err = json.NewDecoder(response.Body).Decode(&responseBody)
+    if err != nil {
+        return CreatePredictionResult{}, fmt.Errorf("failed to decode response body: %w", err)
+    }
 
-	if err != nil {
-		fmt.Println("Could not create prediction", err)
-		os.Exit(1)
-	}
+    if len(responseBody.Data) == 0 {
+        return CreatePredictionResult{}, errors.New("prediction data was empty")
+    }
 
-	if createPredictionResponse.StatusCode != 200 {
-		bodyStr, _ := io.ReadAll(createPredictionResponse.Body)
-		fmt.Println("Could not create prediction", string(bodyStr))
-		os.Exit(1)
-	}
-
-	var createPredictionResponseBody CreatePredictionBody
-	err = json.NewDecoder(createPredictionResponse.Body).Decode(&createPredictionResponseBody)
-	if err != nil {
-		fmt.Println("Could not decode request body at create prediction", err)
-		os.Exit(1)
-	}
-
-	if len(createPredictionResponseBody.Data) == 0 {
-		fmt.Println("Could not create prediction. data was empty")
-		os.Exit(1)
-	}
-
-	prediction := createPredictionResponseBody.Data[0]
-
-	return CreatePredictionResult{
-		PredictionId:     prediction.Id,
-		SuccessOutcomeId: prediction.Outcomes[0].Id,
-		FailureOutcomeId: prediction.Outcomes[1].Id,
-	}
-
+    prediction := responseBody.Data[0]
+    return CreatePredictionResult{
+        PredictionId:     prediction.Id,
+        SuccessOutcomeId: prediction.Outcomes[0].Id,
+        FailureOutcomeId: prediction.Outcomes[1].Id,
+    }, nil
 }
 
-func ResolvePrediction(token string, userId string, predictionId string, winningOutcomeId string) {
+// ResolvePrediction resolves a Twitch prediction
+func ResolvePrediction(token string, userId string, predictionId string, winningOutcomeId string) error {
+    requestBody := fmt.Sprintf(`{
+        "broadcaster_id": "%s",
+        "winning_outcome_id": "%s",
+        "id": "%s",
+        "status": "RESOLVED"
+    }`, userId, winningOutcomeId, predictionId)
 
-	resolvePredictionRequestBody := []byte(fmt.Sprintf(`{
-		"broadcaster_id": "%s",
-		"winning_outcome_id": "%s",
-		"id": "%s",
-		"status": "RESOLVED"
-	}`, userId, winningOutcomeId, predictionId))
+    request, err := http.NewRequest("PATCH", TwitchAPIURL+"/predictions", bytes.NewBuffer([]byte(requestBody)))
+    if err != nil {
+        return fmt.Errorf("failed to create request for resolving prediction: %w", err)
+    }
 
-	resolvePredictionRequest, err := http.NewRequest("PATCH", "https://api.twitch.tv/helix/predictions", bytes.NewBuffer(resolvePredictionRequestBody))
-	if err != nil {
-		fmt.Println("Could not resolve Request for User ID", err)
-		os.Exit(1)
-	}
+    addRequestHeaders(request, token)
 
-	resolvePredictionRequest.Header.Add("Authorization", fmt.Sprintf("Bearer %s", token))
-	resolvePredictionRequest.Header.Add("Client-Id", CLIENT_ID)
-	resolvePredictionRequest.Header.Add("Content-Type", "application/json")
+    response, err := httpClient.Do(request)
+    if err != nil {
+        return fmt.Errorf("failed to resolve prediction: %w", err)
+    }
+    defer response.Body.Close()
 
-	resolvePredictionResponse, err := httpClient.Do(resolvePredictionRequest)
+    if response.StatusCode != 200 {
+        bodyStr, _ := io.ReadAll(response.Body)
+        return fmt.Errorf("failed to resolve prediction: %s", bodyStr)
+    }
 
-	if resolvePredictionResponse.StatusCode != 200 {
-		bodyStr, _ := io.ReadAll(resolvePredictionResponse.Body)
-		fmt.Println("Could not resolve prediction", string(bodyStr))
-		os.Exit(1)
-	}
-
-	if err != nil {
-		fmt.Println("Could not resolve prediction", err)
-		os.Exit(1)
-	}
+    return nil
 }
 
-func IsPredictionFinished(token string, userId string, predictionId string) bool {
-	getPredictionRequest, err := http.NewRequest("GET", fmt.Sprintf("https://api.twitch.tv/helix/predictions?id=%s&broadcaster_id=%s", predictionId, userId), nil)
+// IsPredictionFinished checks if a Twitch prediction is finished
+func IsPredictionFinished(token string, userId string, predictionId string) (bool, error) {
+    request, err := http.NewRequest("GET", fmt.Sprintf("%s/predictions?id=%s&broadcaster_id=%s", TwitchAPIURL, predictionId, userId), nil)
+    if err != nil {
+        return false, fmt.Errorf("failed to create request for checking prediction: %w", err)
+    }
 
-	if err != nil {
-		fmt.Println("Could not create request for getting existing prediction", err)
-		os.Exit(1)
-	}
+    addRequestHeaders(request, token)
 
-	getPredictionRequest.Header.Add("Authorization", fmt.Sprintf("Bearer %s", token))
-	getPredictionRequest.Header.Add("Client-Id", CLIENT_ID)
+    response, err := httpClient.Do(request)
+    if err != nil {
+        return false, fmt.Errorf("failed to check prediction: %w", err)
+    }
+    defer response.Body.Close()
 
-	getPredictionResponse, err := httpClient.Do(getPredictionRequest)
+    if response.StatusCode != 200 {
+        bodyStr, _ := io.ReadAll(response.Body)
+        return false, fmt.Errorf("failed to check prediction: %s", bodyStr)
+    }
 
-	if err != nil {
-		fmt.Println("Could not get prediction", predictionId, err)
-		os.Exit(1)
-	}
+    var responseBody CreatePredictionBody
+    err = json.NewDecoder(response.Body).Decode(&responseBody)
+    if err != nil {
+        return false, fmt.Errorf("failed to decode response body: %w", err)
+    }
 
-	if getPredictionResponse.StatusCode != 200 {
-		bodyStr, _ := io.ReadAll(getPredictionResponse.Body)
-		fmt.Println("Could not get prediction", string(bodyStr))
-		os.Exit(1)
-	}
+    if len(responseBody.Data) == 0 {
+        return false, errors.New("prediction data was empty")
+    }
 
-	var getPredictionResponseBody CreatePredictionBody
-	err = json.NewDecoder(getPredictionResponse.Body).Decode(&getPredictionResponseBody)
-	if err != nil {
-		fmt.Println("Could not decode request body at get prediction")
-		os.Exit(1)
-	}
+    return responseBody.Data[0].Status == "LOCKED", nil
+}
 
-	if len(getPredictionResponseBody.Data) == 0 {
-		fmt.Println("Could not get prediction. data was empty")
-		os.Exit(1)
-	}
-
-	prediction := getPredictionResponseBody.Data[0]
-
-	if prediction.Status == "LOCKED" {
-		return true
-	} else {
-		return false
-	}
-
+// addRequestHeaders adds common headers to an HTTP request
+func addRequestHeaders(request *http.Request, token string) {
+    request.Header.Add("Authorization", fmt.Sprintf("Bearer %s", token))
+    request.Header.Add("Client-Id", CLIENT_ID)
+    request.Header.Add("Content-Type", "application/json")
 }
