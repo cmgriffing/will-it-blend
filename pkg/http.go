@@ -128,11 +128,11 @@ func (e *AllowedPort) String() string {
 // Set must have pointer receiver so it doesn't change the value of a copy
 func (e *AllowedPort) Set(v string) error {
 	switch v {
-	case "3000", "4242", "6969", "8000", "8008", "8080", "42069":
+	case "1337", "3000", "4242", "6666", "6969", "8000", "8008", "8080", "42069":
 		*e = AllowedPort(v)
 		return nil
 	default:
-		return errors.New(`must be one of 3000, 4242, 6969, 8000, 8008, 8080, or 42069`)
+		return errors.New(`must be one of 1337, 3000, 4242, 6666, 6969, 8000, 8008, 8080, or 42069`)
 	}
 }
 
