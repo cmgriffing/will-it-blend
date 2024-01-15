@@ -1,19 +1,18 @@
 package cmd
 
 import (
-    "errors"
-    "fmt"
-    "log"
-    "math"
-    "os"
-    "os/exec"
-    "time"
+	"fmt"
+	"log"
+	"os"
+	"os/exec"
+	"strconv"
+	"time"
 
-    pkg "github.com/cmgriffing/will-it-blend/pkg"
-    "github.com/google/shlex"
-    "github.com/mitchellh/go-homedir"
-    "github.com/spf13/cobra"
-    "github.com/spf13/viper"
+	pkg "github.com/cmgriffing/will-it-blend/pkg"
+	"github.com/google/shlex"
+	"github.com/mitchellh/go-homedir"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // Constants for default configuration values
@@ -33,7 +32,7 @@ var (
     duration      int
     successMsg    string
     failureMsg    string
-    port          pkg.PortFlag
+    port          pkg.AllowedPort
     token         string
 )
 
@@ -95,20 +94,21 @@ func runCommandPrediction(cmd *cobra.Command, args []string) {
         log.Fatalf("Error getting user ID: %s", err)
     }
 
-    prediction, err := createAndRunPrediction(token, userId)
+    userIdStr := strconv.Itoa(userId)
+    prediction, err := createAndRunPrediction(token, userIdStr)
     if err != nil {
         log.Fatalf("Error running prediction: %s", err)
     }
 
-    if !awaitPredictionCompletion(token, userId, prediction.PredictionId) {
+    if !awaitPredictionCompletion(token, userIdStr, prediction.PredictionId) {
         log.Fatal("Prediction did not lock as expected")
     }
 
-    resolvePredictionBasedOnCommand(command, token, userId, prediction)
+    resolvePredictionBasedOnCommand(command, token, userIdStr, prediction)
 }
 
 // createAndRunPrediction creates a new prediction and waits for its duration
-func createAndRunPrediction(token string, userId string) (pkg.Prediction, error) {
+func createAndRunPrediction(token string, userId string) (pkg.CreatePredictionResult, error) {
     prediction := pkg.CreatePrediction(token, title, userId, successMsg, failureMsg, duration)
     fmt.Printf("Prediction running. Command will run after %d seconds\n", duration)
     time.Sleep(time.Duration(duration) * time.Second)
@@ -126,3 +126,42 @@ func awaitPredictionCompletion(token, userId, predictionId string) bool {
         }
     }
     return false
+}
+
+// resolvePredictionBasedOnCommand executes the command and resolves the prediction based on its success or failure
+func resolvePredictionBasedOnCommand(command, token, userId string, prediction pkg.CreatePredictionResult) {
+    commandSuccess := runCommand(command)
+
+    winningOutcomeId := prediction.SuccessOutcomeId
+    if !commandSuccess {
+        winningOutcomeId = prediction.FailureOutcomeId
+    }
+
+    pkg.ResolvePrediction(token, userId, prediction.PredictionId, winningOutcomeId)
+    log.Println("Prediction Resolved")
+}
+
+// runCommand executes the given shell command and returns true if it succeeds
+func runCommand(command string) bool {
+    parts, err := shlex.Split(command)
+    if err != nil {
+        log.Printf("Failed to parse command: %s", err)
+        return false
+    }
+
+    cmd := exec.Command(parts[0], parts[1:]...)
+    cmd.Stdout = os.Stdout
+    cmd.Stderr = os.Stderr
+
+    if err := cmd.Start(); err != nil {
+        log.Printf("Failed to start command: %s", err)
+        return false
+    }
+
+    if err := cmd.Wait(); err != nil {
+        log.Printf("Command execution failed: %s", err)
+        return false
+    }
+
+    return true
+}

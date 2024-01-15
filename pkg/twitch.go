@@ -17,7 +17,7 @@ type GetUserResponseBody struct {
 	Data []UserResponseBody `json:"data"`
 }
 
-func GetUserId(token string) string {
+func GetUserId(token string) (int, error) {
 	getUserRequest, err := http.NewRequest("GET", "https://api.twitch.tv/helix/users", nil)
 
 	if err != nil {
@@ -53,7 +53,7 @@ func GetUserId(token string) string {
 		os.Exit(1)
 	}
 
-	return getUserBody.Data[0].Id
+	return 0, err
 }
 
 type CreatePredictionResult struct {
